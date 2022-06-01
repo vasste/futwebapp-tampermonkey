@@ -1,5 +1,5 @@
 /* globals
-gConfigurationModel models
+gConfigurationModel models services
 */
 
 import { BaseScript, SettingsEntry } from '../core';
@@ -43,19 +43,14 @@ class ListSize extends BaseScript {
 
     const itemsOnMarket = parseInt(this.getSettings()['items-per-page-transfermarket'], 10);
     const itemsOnClub = parseInt(this.getSettings()['items-per-page-club'], 10);
-    const configObj = gConfigurationModel
-      .getConfigObject(models.ConfigurationModel.KEY_ITEMS_PER_PAGE);
-    configObj[models.ConfigurationModel.ITEMS_PER_PAGE.TRANSFER_MARKET] = itemsOnMarket;
-    configObj[models.ConfigurationModel.ITEMS_PER_PAGE.CLUB] = itemsOnClub;
+    services.Module.configRepository.configs.itemsPerPage.transferMarket = itemsOnMarket;
+    services.Module.configRepository.configs.itemsPerPage.club = itemsOnClub;
   }
 
   _stop() {
     this._running = false;
-
-    const configObj = gConfigurationModel
-      .getConfigObject(models.ConfigurationModel.KEY_ITEMS_PER_PAGE);
-    configObj[models.ConfigurationModel.ITEMS_PER_PAGE.TRANSFER_MARKET] = 15;
-    configObj[models.ConfigurationModel.ITEMS_PER_PAGE.CLUB] = 45;
+    services.Module.configRepository.configs.itemsPerPage.transferMarket = 20;
+    services.Module.configRepository.configs.itemsPerPage.club = 20;
   }
 }
 

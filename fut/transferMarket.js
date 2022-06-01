@@ -24,8 +24,6 @@ export class TransferMarket {
   /* eslint-enable class-methods-use-this */
 
   async searchMinBuy(item, itemsForMean = 3, lowUp = false) {
-    services.Item.clearTransferMarketCache();
-
     this._logger.log(`Searching min buy for ${item.type} ${item._staticData.name} from low upward first ${lowUp}`, 'Core - Transfermarket');
     let minBuy = 0;
 
@@ -129,7 +127,7 @@ export class TransferMarket {
   async _findLowUp(item, itemsForMean) {
     const searchCriteria = this._defineSearchCriteria(item, 200);
     await PinEvent.sendPageView('Transfer Market Search');
-    await utils.sleep(3000);
+    await utils.sleep(400);
     await PinEvent.sendPageView('Transfer Market Results - List View', 0);
     await PinEvent.sendPageView('Item - Detail View', 0);
     const items = await this._find(searchCriteria);
@@ -149,14 +147,13 @@ export class TransferMarket {
     for (let minBuyFound = false; minBuyFound === false;) {
       /* eslint-disable no-await-in-loop */
       await PinEvent.sendPageView('Transfer Market Search');
-      await utils.sleep(800);
+      await utils.sleep(200, 200);
       await PinEvent.sendPageView('Transfer Market Results - List View', 0);
       await PinEvent.sendPageView('Item - Detail View', 0);
       const items = await this._find(searchCriteria);
       /* eslint-enable no-await-in-loop */
       if (items.length > 0) {
         valuesFound = valuesFound.concat(items.map(i => i._auction.buyNowPrice));
-
         const minBuyOnPage = Math.min(...items.map(i => i._auction.buyNowPrice));
         if (minBuyOnPage < minBuy) {
           minBuy = minBuyOnPage;
@@ -198,40 +195,26 @@ export class TransferMarket {
   }
 
   /* eslint-disable class-methods-use-this */
-  _defineSearchCriteria(item, maxBuy = -1) {
+  _defineSearchCriteria(item, maxBuy = 0) {
     // TODO: check if this can handle other items as well
     // eslint-disable-next-line no-undef
     const searchCriteria = new UTSearchCriteriaDTO();
-
-    searchCriteria.count = 30;
-    searchCriteria.maskedDefId = item.getMaskedResourceId();
+    // used items-per-page-transfermarket settings
+    // searchCriteria.count = 20;
+    searchCriteria.defId = [item.definitionId];
     searchCriteria.type = item.type;
-
-    if (item.rareflag === 47) { // 47 = Champions
-      // if it is a Champions card, this is seen as a gold card
-      // Can only search for "Gold" in this case
-      searchCriteria.level = factories.DataProvider.getItemLevelDP(true)
-        .filter(d => d.id === 2)[0].value;
-    } else if (item.rareflag >= 3) { // 3 = TOTW
-      // if it is TOTW or other special, set it to TOTW. See enums.ItemRareType.
-      // Can only search for "Specials", not more specific on Rare Type
-      searchCriteria.level = factories.DataProvider.getItemLevelDP(true)
-        .filter(d => d.id === 3)[0].value;
-    }
-
-    searchCriteria.category = enums.SearchCategory.ANY;
-    searchCriteria.position = enums.SearchType.ANY;
-    if (maxBuy !== -1) {
-      searchCriteria.maxBuy = maxBuy;
-    }
-
+    searchCriteria.rarities = [item.rareflag];
+    searchCriteria.category = searchCriteria.mapSubTypeToCategory(item.subtype);
+    searchCriteria.maxBuy = maxBuy;
+    searchCriteria.level = enums.SearchLevel.ANY;
     return searchCriteria;
   }
   /* eslint-enable class-methods-use-this */
 
-  _find(searchCriteria) {
+  _find(searchCriteria, page = 1) {
     return new Promise((resolve, reject) => {
-      services.Item.searchTransferMarket(searchCriteria, 1).observe(
+      services.Item.clearTransferMarketCache();
+      services.Item.searchTransferMarket(searchCriteria, page).observe(
         this,
         function (obs, res) {
           if (!res.success) {

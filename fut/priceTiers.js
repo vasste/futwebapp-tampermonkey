@@ -1,7 +1,8 @@
-/* global utils UTCurrencyInputControl */
+/* global UTCurrencyInputControl */
 export default {
   roundValueToNearestPriceTiers(value) {
-    const tier = utils.JS.find(UTCurrencyInputControl.PRICE_TIERS, i => value > i.min);
+    /* const tier = utils.JS.find(UTCurrencyInputControl.PRICE_TIERS, i => value > i.min); */
+    const tier = UTCurrencyInputControl.PRICE_TIERS.find(i => value > i.min);
 
     const diff = value % tier.inc;
 
@@ -14,7 +15,7 @@ export default {
   },
 
   roundDownToNearestPriceTiers(value) {
-    const tier = utils.JS.find(UTCurrencyInputControl.PRICE_TIERS, i => value > i.min);
+    const tier = UTCurrencyInputControl.PRICE_TIERS.find(i => value > i.min);
 
     const diff = value % tier.inc;
 
@@ -25,7 +26,7 @@ export default {
   },
 
   determineListPrice(start, buyNow) {
-    const tier = utils.JS.find(UTCurrencyInputControl.PRICE_TIERS, i => buyNow > i.min);
+    const tier = UTCurrencyInputControl.PRICE_TIERS.find(i => buyNow > i.min);
 
     const startPrice = this.roundValueToNearestPriceTiers(start);
     let buyNowPrice = this.roundValueToNearestPriceTiers(buyNow);
